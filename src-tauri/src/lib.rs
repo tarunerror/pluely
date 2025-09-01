@@ -36,6 +36,46 @@ fn set_window_height(window: tauri::WebviewWindow, height: u32) -> Result<(), St
 }
 
 #[tauri::command]
+fn set_always_on_top(window: tauri::WebviewWindow, always_on_top: bool) -> Result<(), String> {
+    window.set_always_on_top(always_on_top)
+        .map_err(|e| format!("Failed to set always on top: {}", e))
+}
+
+#[tauri::command]
+fn bring_to_front(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.set_focus()
+        .map_err(|e| format!("Failed to bring window to front: {}", e))
+}
+
+#[tauri::command]
+fn set_window_focus(window: tauri::WebviewWindow, focused: bool) -> Result<(), String> {
+    if focused {
+        window.set_focus()
+            .map_err(|e| format!("Failed to focus window: {}", e))
+    } else {
+        // Note: Tauri doesn't have a direct unfocus method
+        // This is mainly for bringing focus when needed
+        Ok(())
+    }
+}
+
+#[tauri::command]
+fn temporary_disable_always_on_top(window: tauri::WebviewWindow, duration_ms: u64) -> Result<(), String> {
+    // Disable always on top temporarily
+    window.set_always_on_top(false)
+        .map_err(|e| format!("Failed to disable always on top: {}", e))?;
+    
+    // Schedule re-enabling after the specified duration
+    let window_clone = window.clone();
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(tokio::time::Duration::from_millis(duration_ms)).await;
+        let _ = window_clone.set_always_on_top(true);
+    });
+    
+    Ok(())
+}
+
+#[tauri::command]
 fn capture_to_base64() -> Result<String, String> {
     let monitors = Monitor::all().map_err(|e| format!("Failed to get monitors: {}", e))?;
     let primary_monitor = monitors
@@ -63,6 +103,10 @@ pub fn run() {
             greet, 
             get_app_version,
             set_window_height,
+            set_always_on_top,
+            bring_to_front,
+            set_window_focus,
+            temporary_disable_always_on_top,
             capture_to_base64
         ])
         .setup(|app| {

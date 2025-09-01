@@ -3,7 +3,7 @@ use tauri::{Manager, App, WebviewWindow};
 // The offset from the top of the screen to the window
 const TOP_OFFSET: i32 = 54;
 
-/// Sets up the main window with custom positioning
+/// Sets up the main window with custom positioning and always on top behavior
 pub fn setup_main_window(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     // Try different possible window labels
     let window = app.get_webview_window("main")
@@ -15,6 +15,23 @@ pub fn setup_main_window(app: &mut App) -> Result<(), Box<dyn std::error::Error>
         .ok_or("No window found")?;
     
     position_window_top_center(&window, TOP_OFFSET)?;
+    
+    // Ensure window is always on top
+    window.set_always_on_top(true)?;
+    
+    // Set initial focus
+    window.set_focus()?;
+    
+    Ok(())
+}
+
+/// Maintains window always on top and focus when needed
+pub fn maintain_window_behavior(window: &WebviewWindow) -> Result<(), Box<dyn std::error::Error>> {
+    // Ensure always on top is maintained
+    window.set_always_on_top(true)?;
+    
+    // Bring to front if needed
+    window.set_focus()?;
     
     Ok(())
 }

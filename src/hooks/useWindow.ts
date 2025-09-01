@@ -20,6 +20,55 @@ export const useWindowResize = () => {
   return { resizeWindow };
 };
 
+export const useAlwaysOnTop = () => {
+  const setAlwaysOnTop = useCallback(async (alwaysOnTop: boolean) => {
+    try {
+      const window = getCurrentWebviewWindow();
+      await invoke("set_always_on_top", {
+        window,
+        alwaysOnTop,
+      });
+    } catch (error) {
+      console.error("Failed to set always on top:", error);
+    }
+  }, []);
+
+  const bringToFront = useCallback(async () => {
+    try {
+      const window = getCurrentWebviewWindow();
+      await invoke("bring_to_front", { window });
+    } catch (error) {
+      console.error("Failed to bring window to front:", error);
+    }
+  }, []);
+
+  const setWindowFocus = useCallback(async (focused: boolean) => {
+    try {
+      const window = getCurrentWebviewWindow();
+      await invoke("set_window_focus", {
+        window,
+        focused,
+      });
+    } catch (error) {
+      console.error("Failed to set window focus:", error);
+    }
+  }, []);
+
+  const temporaryDisableAlwaysOnTop = useCallback(async (durationMs: number = 2000) => {
+    try {
+      const window = getCurrentWebviewWindow();
+      await invoke("temporary_disable_always_on_top", {
+        window,
+        durationMs,
+      });
+    } catch (error) {
+      console.error("Failed to temporarily disable always on top:", error);
+    }
+  }, []);
+
+  return { setAlwaysOnTop, bringToFront, setWindowFocus, temporaryDisableAlwaysOnTop };
+};
+
 interface UseWindowFocusOptions {
   onFocusLost?: () => void;
   onFocusGained?: () => void;

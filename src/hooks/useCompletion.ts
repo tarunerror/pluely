@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useWindowResize } from "./useWindow";
-import { useWindowFocus } from "@/hooks";
 import { MAX_FILES } from "@/config";
 import { useApp } from "@/contexts";
 import { fetchAIResponse, safeLocalStorage } from "@/lib";
@@ -670,12 +669,29 @@ export const useCompletion = () => {
     }
   }, [state.response]);
 
-  useWindowFocus({
-    onFocusLost: () => {
-      setMicOpen(false);
-      setMessageHistoryOpen(false);
-    },
-  });
+  // Handle user interactions with the app (less aggressive than before)
+  const handleUserInteraction = useCallback(() => {
+    // Only bring to front if the user is actively clicking within our app
+    // This prevents interference with typing in other applications
+  }, []);
+
+  // Add gentle interaction handling that doesn't interfere with system operations
+  useEffect(() => {
+    const handleAppClick = (event: MouseEvent) => {
+      // Only respond to clicks directly on our app elements
+      const target = event.target as Element;
+      if (target && target.closest('[data-tauri-drag-region]')) {
+        handleUserInteraction();
+      }
+    };
+
+    // Only listen for clicks, not all interactions
+    document.addEventListener('click', handleAppClick);
+    
+    return () => {
+      document.removeEventListener('click', handleAppClick);
+    };
+  }, [handleUserInteraction]);
 
   return {
     input: state.input,
