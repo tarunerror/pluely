@@ -7,6 +7,7 @@ use base64::Engine;
 use image::codecs::png::PngEncoder;
 use image::{ColorType, ImageEncoder};
 use tauri_plugin_http;
+use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, GlobalShortcutExt};
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -76,6 +77,23 @@ fn temporary_disable_always_on_top(window: tauri::WebviewWindow, duration_ms: u6
 }
 
 #[tauri::command]
+fn toggle_window_visibility(window: tauri::WebviewWindow) -> Result<(), String> {
+    match window.is_visible() {
+        Ok(true) => {
+            window.hide()
+                .map_err(|e| format!("Failed to hide window: {}", e))
+        },
+        Ok(false) => {
+            window.show()
+                .map_err(|e| format!("Failed to show window: {}", e))?;
+            window.set_focus()
+                .map_err(|e| format!("Failed to focus window: {}", e))
+        },
+        Err(e) => Err(format!("Failed to get window visibility: {}", e)),
+    }
+}
+
+#[tauri::command]
 fn capture_to_base64() -> Result<String, String> {
     let monitors = Monitor::all().map_err(|e| format!("Failed to get monitors: {}", e))?;
     let primary_monitor = monitors
@@ -99,6 +117,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             greet, 
             get_app_version,
@@ -107,11 +126,25 @@ pub fn run() {
             bring_to_front,
             set_window_focus,
             temporary_disable_always_on_top,
+            toggle_window_visibility,
             capture_to_base64
         ])
         .setup(|app| {
             // Setup main window positioning
             window::setup_main_window(app).expect("Failed to setup main window");
+            
+            // Register global shortcut for Ctrl/Cmd + /
+            let shortcut = if cfg!(target_os = "macos") {
+                "Cmd+Slash"
+            } else {
+                "Ctrl+Slash"
+            };
+            
+            let window = app.get_webview_window("main").expect("Failed to get main window");
+            app.global_shortcut().register(shortcut, move || {
+                let _ = window.emit("global-shortcut-pressed", ());
+            }).expect("Failed to register global shortcut");
+            
             Ok(())
         });
 

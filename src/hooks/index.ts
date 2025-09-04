@@ -5,3 +5,5 @@ export * from "./useWindowBehavior";
 export * from "./useCustomProvider";
 export * from "./useCustomSttProviders";
 export * from "./useSettings";
+export * from "./useGlobalShortcut";
+export * from "./useSystemAudioCapture";

@@ -7,9 +7,10 @@ import {
   TextInput,
   Switch,
 } from "@/components";
-import { PlusIcon, SaveIcon, SparklesIcon, XIcon } from "lucide-react";
+import { PlusIcon, SaveIcon, SparklesIcon, XIcon, WifiIcon, CheckCircleIcon, AlertCircleIcon } from "lucide-react";
 import { useCustomSttProviders } from "@/hooks";
-import { AUTH_TYPES } from "@/lib";
+import { AUTH_TYPES, testSTTProvider } from "@/lib";
+import { useState } from "react";
 
 interface CreateEditProviderProps {
   customProviderHook?: ReturnType<typeof useCustomSttProviders>;
@@ -37,6 +38,45 @@ export const CreateEditProvider = ({
     queryParamName,
     setQueryParamName,
   } = hookInstance;
+
+  // Test connection state
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+
+  // Test connection function
+  const handleTestConnection = async () => {
+    if (!formData.name.trim() || !formData.baseUrl.trim() || !formData.endpoint.trim()) {
+      setTestResult({
+        success: false,
+        message: "Please fill in the required fields (Name, Base URL, and Endpoint) before testing.",
+      });
+      return;
+    }
+
+    // For testing, we need an API key. For custom auth, use a placeholder
+    let testApiKey = "test-key";
+    if (formData.authType === "bearer" || formData.authType === "basic" || formData.authType === "basic-apikey") {
+      testApiKey = "test-api-key-placeholder";
+    }
+
+    setIsTestingConnection(true);
+    setTestResult(null);
+
+    try {
+      const result = await testSTTProvider(formData as any, testApiKey);
+      setTestResult(result);
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: "Failed to test connection. Please check your configuration.",
+      });
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
 
   // Key-value pair management functions
   const addKeyValuePair = (field: "headers" | "fields" | "query") => {
@@ -410,6 +450,42 @@ export const CreateEditProvider = ({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Test Connection Section */}
+          <div className="border-t border-input/20 pt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium">Test Connection</h3>
+                <p className="text-xs text-muted-foreground">
+                  Verify your provider configuration before saving
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleTestConnection}
+                disabled={isTestingConnection || !formData.name.trim() || !formData.baseUrl.trim() || !formData.endpoint.trim()}
+                className="flex items-center gap-2"
+              >
+                <WifiIcon className="h-4 w-4" />
+                {isTestingConnection ? "Testing..." : "Test Connection"}
+              </Button>
+            </div>
+
+            {testResult && (
+              <div className={`flex items-center gap-2 p-3 rounded-md border ${
+                testResult.success
+                  ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-200"
+                  : "bg-red-50 border-red-200 text-red-800 dark:bg-red-950 dark:border-red-800 dark:text-red-200"
+              }`}>
+                {testResult.success ? (
+                  <CheckCircleIcon className="h-4 w-4" />
+                ) : (
+                  <AlertCircleIcon className="h-4 w-4" />
+                )}
+                <p className="text-sm">{testResult.message}</p>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 -mt-3">
