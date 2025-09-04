@@ -44,7 +44,7 @@ const App = () => {
         <div 
           data-tauri-drag-region 
           className="absolute top-0 left-0 right-0 h-3 bg-transparent cursor-move z-10"
-          title="Drag to move window"
+          title="Drag to move window • Press Ctrl+/ (Cmd+/ on Mac) to show/hide"
         />
         <Completion />
         <ChatHistory

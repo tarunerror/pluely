@@ -13,6 +13,7 @@ import { ScreenshotConfigs } from "./ScreenshotConfigs";
 import { AIProviders } from "./ai-configs";
 import { STTProviders } from "./stt-configs";
 import { DeleteChats } from "./DeleteChats";
+import { VersionInfo } from "./VersionInfo";
 
 export const Settings = () => {
   const settings = useSettings();
@@ -42,6 +43,9 @@ export const Settings = () => {
       >
         <ScrollArea className="h-[calc(100vh-7.2rem)]">
           <div className="p-6 space-y-6">
+            {/* Version Information */}
+            <VersionInfo />
+
             {/* System Prompt */}
             <SystemPrompt {...settings} />
 
