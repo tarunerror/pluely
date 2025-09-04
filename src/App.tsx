@@ -1,7 +1,7 @@
 import { Card, Settings, Updater } from "./components";
 import { Completion } from "./components/completion";
 import { ChatHistory } from "./components/history";
-import { useWindowBehavior } from "./hooks";
+import { useWindowBehavior, useGlobalShortcut } from "./hooks";
 
 const App = () => {
   // Initialize smart window behavior that respects system interactions
@@ -17,6 +17,9 @@ const App = () => {
       // Window regained focus naturally
     },
   });
+
+  // Initialize global shortcut for Ctrl/Cmd + /
+  useGlobalShortcut();
   const handleSelectConversation = (conversation: any) => {
     // Use localStorage to communicate the selected conversation to Completion component
     localStorage.setItem("selectedConversation", JSON.stringify(conversation));
